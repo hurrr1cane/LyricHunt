@@ -12,6 +12,7 @@ public class SessionMapper implements Mapper<Session, SessionDto>{
                 .sessionId(session.getSessionId())
                 .guess(session.getGuess())
                 .guessed(session.isGuessed())
+                .artist(session.getSong().getArtist())
                 .build();
     }
 

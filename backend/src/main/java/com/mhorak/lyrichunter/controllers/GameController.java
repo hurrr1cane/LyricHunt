@@ -13,6 +13,7 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/game")
 public class GameController {
 
