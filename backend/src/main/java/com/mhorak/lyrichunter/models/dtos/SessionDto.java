@@ -15,6 +15,4 @@ public class SessionDto {
     private UUID sessionId;
     private String guess;
     private boolean guessed;
-
-
 }

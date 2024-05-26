@@ -7,6 +7,7 @@ import com.mhorak.lyrichunter.models.Song;
 import com.mhorak.lyrichunter.repositories.SessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.UUID;
@@ -26,10 +27,12 @@ public class GameService {
         this.geniusService = geniusService;
     }
 
-    public Session startGame(Long artistId) {
+    public Session startGame(String artistName) {
         // Create a new session
         Session session = new Session();
         session.setSessionId(UUID.randomUUID());
+
+        Long artistId = geniusService.getArtist(artistName);
 
         List<Long> songIds = (List<Long>) geniusService.getArtistSongIds(artistId);
 
@@ -42,7 +45,7 @@ public class GameService {
         Song song = convertSongResponse(songResponse);
         session.setSong(song);
 
-        session.setGuess("");
+        session.setGuess(getStarterGuess(song.getLyrics()));
         session.setGuessed(false);
 
         // Save the session to DB
@@ -51,6 +54,101 @@ public class GameService {
         System.out.println("Lyrics: " + session.getSong().getLyrics());
 
         return session;
+    }
+
+    public Session revealWord(UUID sessionId, JsonNode guessJson) {
+
+        String guess = guessJson.get("word").asText();
+
+        Session session = sessionRepository.findById(sessionId).
+                orElseThrow(() -> new RuntimeException("Session not found"));
+
+        guess = guess.trim();
+        // Make sure that guess is one word
+        // If guess contains more than one word, only the first word will be used
+        if (guess.contains(" ")) {
+            guess = guess.split(" ")[0];
+        }
+        // Remove all non-alphabetic characters or ' - from the guess
+        guess = guess.replaceAll("[^a-zA-Z'-]", "");
+
+
+        // Replace all occurrences of the guessed word in the guess with the actual word
+        String lyrics = session.getSong().getLyrics();
+        // Find the index of the guessed word in the lyrics
+        // check lowercase
+        int index = lyrics.toLowerCase().indexOf(guess.toLowerCase());
+        while (index != -1) {
+
+            // If the word is surrounded by " " or "\n" or "," or "." or "!" or "?" or ":", replace it
+            String[] surroundingChars = {" ", "\n", ",", ".", "!", "?", ":", "", ";"};
+
+            String[] wordSurroundings = new String[2];
+
+            if (index == 0) {
+                wordSurroundings[0] = "";
+            } else {
+                wordSurroundings[0] = lyrics.substring(index - 1, index);
+            }
+
+            if (index + guess.length() == lyrics.length()) {
+                wordSurroundings[1] = "";
+            } else {
+                wordSurroundings[1] = lyrics.substring(index + guess.length(), index + guess.length() + 1);
+            }
+
+            // If wordSurroundings[0] and wordSurroundings[1] are in surroundingChars, replace the word
+            if (List.of(surroundingChars).contains(wordSurroundings[0]) && List.of(surroundingChars).contains(wordSurroundings[1])) {
+                // Replace the word in the guess
+                session.setGuess(
+                        session.getGuess().substring(0, index)
+                                + lyrics.substring(index, index + guess.length())
+                                + session.getGuess().substring(index + guess.length())
+                );
+            }
+
+            index = lyrics.toLowerCase().indexOf(guess.toLowerCase(), index + guess.length());
+        }
+
+        return sessionRepository.save(session);
+    }
+
+    public Session guess(UUID sessionId, JsonNode guessJson) {
+        String guess = guessJson.get("guess").asText();
+
+        Session session = sessionRepository.findById(sessionId).
+                orElseThrow(() -> new RuntimeException("Session not found"));
+
+        if (isPartlyMatched(session.getSong().getTitle(), guess)) {
+            session.setGuessed(true);
+        }
+
+        return sessionRepository.save(session);
+    }
+
+    private boolean isPartlyMatched(String songName, String guess) {
+        // Normalize strings
+        String normalizedSongName = songName.toLowerCase();
+        String normalizedGuess = guess.toLowerCase();
+
+        // Tokenize strings
+        String[] songNameWords = normalizedSongName.split("\\s+");
+        String[] guessWords = normalizedGuess.split("\\s+");
+
+        // Define minimum word match threshold
+        int minWordMatchThreshold = Math.min(2, songNameWords.length);
+
+        // Check partial match
+        int matchedWords = 0;
+        for (int i = 0, j = 0; i < songNameWords.length && j < guessWords.length; i++) {
+            if (songNameWords[i].equals(guessWords[j])) {
+                matchedWords++;
+                j++;
+            }
+        }
+
+        // Verify if the number of matched words meets the threshold
+        return matchedWords >= minWordMatchThreshold || guessWords.length == songNameWords.length;
     }
 
     private Song convertSongResponse(String songResponse) {
@@ -79,5 +177,24 @@ public class GameService {
         }
 
         return song;
+    }
+
+    private String getStarterGuess(String lyrics) {
+        String[] words = lyrics.split(" ");
+        StringBuilder guess = new StringBuilder();
+        for (String word : words) {
+            guess.append("_".repeat(word.length()));
+            guess.append(" ");
+        }
+
+        Character[] punctuation = {'.', ',', '!', '?', ':', ';', '\n'};
+        for (int i = 0; i < lyrics.length(); i++) {
+            if (List.of(punctuation).contains(lyrics.charAt(i))) {
+                guess.setCharAt(i, lyrics.charAt(i));
+            }
+        }
+
+
+        return guess.toString();
     }
 }

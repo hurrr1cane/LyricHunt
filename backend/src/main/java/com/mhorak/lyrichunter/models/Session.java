@@ -15,12 +15,12 @@ import java.util.UUID;
 @Builder
 public class Session {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO) // Use AUTO for UUID generation
     private UUID sessionId;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Song song;
 
+    @Column(length = 10000)
     private String guess;
 
     private boolean guessed;

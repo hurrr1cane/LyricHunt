@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -53,17 +54,48 @@ public class GeniusApiService {
                 .bodyToMono(String.class);
     }
 
-    public Iterable<Long> getArtistSongIds(Long artistId) {
-        var artistResponse = this.webClient.get()
-                .uri("/artists/{id}/songs", artistId)
+    public Long getArtist(String query) {
+        var response = this.webClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/search").queryParam("q", query).queryParam("type", "artist").build())
                 .header("Authorization", "Bearer " + apiToken)
                 .retrieve()
-                .bodyToMono(String.class)
-                .block();
+                .bodyToMono(String.class);
 
-        return retrieveSongIds(artistResponse);
-
+        return retrieveArtistId(response.block());
     }
+
+    public Iterable<Long> getArtistSongIds(Long artistId) {
+        List<Long> allSongIds = new ArrayList<>();
+        int currentPage = 1;
+        boolean hasMorePages = true;
+
+        while (hasMorePages) {
+            int finalCurrentPage = currentPage;
+            String artistResponse = this.webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/artists/{id}/songs")
+                            .queryParam("page", finalCurrentPage)
+                            .queryParam("per_page", 50)
+                            .build(artistId))
+                    .header("Authorization", "Bearer " + apiToken)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+
+            // Assuming retrieveSongIds is a method that extracts song IDs from the JSON response
+            List<Long> songIds = retrieveSongIds(artistResponse);
+
+            if (songIds.isEmpty()) {
+                hasMorePages = false;
+            } else {
+                allSongIds.addAll(songIds);
+                currentPage++;
+            }
+        }
+
+        return allSongIds;
+    }
+
 
     public String getLyrics(String url) {
         try {
@@ -81,11 +113,18 @@ public class GeniusApiService {
             Element lyricsElement = document.selectFirst("#lyrics-root > div.Lyrics__Container-sc-1ynbvzw-1.kUgSbL");
 
             if (lyricsElement != null) {
+
+                // Remove all <a> and <span> tags from the lyrics, but save their content
+                lyricsElement.select("a, span").forEach(Node::unwrap);
+
                 // Extract the text content of the lyrics element
                 String lyricsText = lyricsElement.html();
 
                 // Replace <br> tags with newline characters
                 lyricsText = lyricsText.replaceAll("<br>", "\n");
+
+                // Remove everything inside square brackets (e.g., [Chorus], [Verse])
+                lyricsText = lyricsText.replaceAll("\\[.*?]", "");
 
                 // Return the lyrics with newline characters added at the end of each line
                 return lyricsText;
@@ -113,7 +152,7 @@ public class GeniusApiService {
         }
     }
 
-    private Iterable<Long> retrieveSongIds(String artistResponse) {
+    private List<Long> retrieveSongIds(String artistResponse) {
         List<Long> ids = new ArrayList<>();
 
         try {
@@ -134,7 +173,7 @@ public class GeniusApiService {
                     }
                 }
             } else {
-                throw new IllegalArgumentException("No songs found in the response");
+                return ids;
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse song IDs from response", e);
