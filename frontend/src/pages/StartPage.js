@@ -10,8 +10,6 @@ export default function StartPage() {
   const [error, setError] = useState(false);
   const [artistName, setArtistName] = useState(""); // State to store artist name
 
-  console.log(artistName);
-
   function startGameHandler() {
     if (artistName.trim().length === 0) {
       // Show error if artist name is empty
