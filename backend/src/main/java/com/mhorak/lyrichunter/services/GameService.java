@@ -70,7 +70,8 @@ public class GameService {
             guess = guess.split(" ")[0];
         }
         // Remove all non-alphabetic characters or ' - from the guess
-        guess = guess.replaceAll("[^a-zA-Z'-]", "");
+        guess = guess.replaceAll("[^a-zA-Zа-яїієґА-ЯЇІЄҐ' -]", "");
+
 
 
         // Replace all occurrences of the guessed word in the guess with the actual word
