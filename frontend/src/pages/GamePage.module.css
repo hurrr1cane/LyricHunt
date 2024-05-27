@@ -109,3 +109,23 @@
   }
   
 }
+
+@media screen and (min-width: 600px) and (max-width: 1000px)
+{
+
+  .lyricsSection {
+    width: 90%;
+    
+  }
+  
+}
+
+@media screen and (min-width: 1000px)
+{
+
+ .lyricsSection {
+    width: 70%;
+    
+  }
+  
+}

@@ -1,5 +1,5 @@
 import { React, useState } from "react";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData, useNavigate } from "react-router-dom";
 import Input from "../components/Input";
 import Button from "../components/Button";
 
@@ -7,12 +7,15 @@ import styles from "./GamePage.module.css";
 
 export default function GamePage() {
   const data = useLoaderData();
+  const navigate = useNavigate();
+
 
 
   const [lyrics, setLyrics] = useState(data.guess); // State to store lyrics
 
   const [wordToReveal, setWordToReveal] = useState(""); // State to store word to reveal
 
+  const [songName, setSongName] = useState(""); // State to store song name
   async function revealHandler() {
     // Make a post request to http://localhost:8080/game/reveal/{sessionId} with the word to reveal
     // If the request is successful, update the lyrics state
@@ -41,18 +44,56 @@ export default function GamePage() {
     setWordToReveal("");
   }
 
-  const handleKeyPress = (event) => {
+  const handleKeyPressReveal = (event) => {
     // Check for 'enter' key press
     if (event.key === "Enter") {
       revealHandler();
     }
+  };
+
+  async function guessHandler() {
+    const response = await fetch(
+      `http://localhost:8080/game/guess/${data.sessionId}`,
+      {
+        method: "POST",
+        body: JSON.stringify({ guess: songName }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        setLyrics(data.guess);
+        if (data.guessed) {
+          // Redirect to WinPage
+          navigate("/game/win", { state: { data } });
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+
+    setSongName("");
   }
+
+  const guessOnChange = (event) => {
+    setSongName(event.target.value);
+  };
+
+  const handleKeyPressGuess = (event) => {
+    if (event.key === "Enter") {
+      guessHandler();
+    }
+  };
+
 
   const wordOnChange = (event) => {
     setWordToReveal(event.target.value);
-  }
+  };
 
-  return (
+  
+  return ( 
     <div class={styles.body}>
       <div className={styles.header}>
         <h1 className={styles.h1}>LyricHunt</h1>
@@ -61,14 +102,22 @@ export default function GamePage() {
       <div className={styles.main}>
         <div className={`${styles.row} ${styles.center}`}>
           <h2>{data.artist} - </h2>
-          <Input className={styles.input} placeholder="Enter the song name" />
-          <Button className="small-button">Guess</Button>
+          <Input
+            value={songName}
+            className={styles.input}
+            onKeyPress={handleKeyPressGuess}
+            placeholder="Enter the song name"
+            onChange={guessOnChange}
+          />
+          <Button onClick={guessHandler} className="small-button">
+            Guess
+          </Button>
         </div>
         <div className={styles.lyricsSection}>
           <div className={`${styles.row}`}>
             <Input
               onChange={wordOnChange}
-              onKeyPress={handleKeyPress}
+              onKeyPress={handleKeyPressReveal}
               value={wordToReveal}
               className={styles.inputStart}
               placeholder="Enter the word to reveal"
@@ -117,7 +166,12 @@ export async function loader({ request, params }) {
     {
       method: "POST",
     }
-  );
+  ).then((response) => {
+    if (!response.ok) {
+      throw new Error("Failed to start the game");
+    }
+    return response.json();
+  })
 
   return response;
 }
