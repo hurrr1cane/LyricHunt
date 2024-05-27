@@ -40,6 +40,7 @@ public class GameController {
     public ResponseEntity<?> guess(@PathVariable UUID sessionId, @RequestBody JsonNode guess) {
         Session session = gameService.guess(sessionId, guess);
         if (session.isGuessed()) {
+            session.getSong().getLyrics();
             return ResponseEntity.ok(session);
         }
         return ResponseEntity.ok(sessionMapper.mapTo(session));

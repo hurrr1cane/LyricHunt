@@ -2,6 +2,7 @@ package com.mhorak.lyrichunter.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.netty.channel.ChannelOption;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -12,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -115,7 +117,7 @@ public class GeniusApiService {
             if (lyricsElement != null) {
 
                 // Remove all <a> and <span> tags from the lyrics, but save their content
-                lyricsElement.select("a, span").forEach(Node::unwrap);
+                lyricsElement.select("a, span, i").forEach(Node::unwrap);
 
                 // Extract the text content of the lyrics element
                 String lyricsText = lyricsElement.html();

@@ -1,5 +1,7 @@
 package com.mhorak.lyrichunter.models;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.mhorak.lyrichunter.serializers.SessionSerializer;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,6 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@JsonSerialize(using = SessionSerializer.class)
 public class Session {
     @Id
     private UUID sessionId;

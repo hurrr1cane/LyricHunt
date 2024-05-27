@@ -130,6 +130,10 @@ public class GameService {
     private boolean isPartlyMatched(String songName, String guess) {
         // Normalize strings
         String normalizedSongName = songName.toLowerCase();
+
+        // Remove all in () from song name
+        normalizedSongName = normalizedSongName.replaceAll("\\(.*?\\)", "");
+
         String normalizedGuess = guess.toLowerCase();
 
         // Tokenize strings
@@ -168,7 +172,7 @@ public class GameService {
 
             song.setLyrics(lyrics);
 
-            System.out.println("Lyrics length: " + lyrics.length());
+            //System.out.println("Lyrics length: " + lyrics.length());
 
             //System.out.println("Lyrics: " + lyrics);
 
@@ -188,7 +192,7 @@ public class GameService {
             guess.append(" ");
         }
 
-        Character[] punctuation = {'.', ',', '!', '?', ':', ';', '\n'};
+        Character[] punctuation = {'.', ',', '!', '?', ':', ';', '\n', '—'};
         for (int i = 0; i < lyrics.length(); i++) {
             if (List.of(punctuation).contains(lyrics.charAt(i))) {
                 guess.setCharAt(i, lyrics.charAt(i));
