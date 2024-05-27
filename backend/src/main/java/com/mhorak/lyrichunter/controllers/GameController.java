@@ -8,7 +8,6 @@ import com.mhorak.lyrichunter.models.dtos.SessionDto;
 import com.mhorak.lyrichunter.services.GameService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
@@ -40,10 +39,19 @@ public class GameController {
     public ResponseEntity<?> guess(@PathVariable UUID sessionId, @RequestBody JsonNode guess) {
         Session session = gameService.guess(sessionId, guess);
         if (session.isGuessed()) {
-            session.getSong().getLyrics();
             return ResponseEntity.ok(session);
         }
         return ResponseEntity.ok(sessionMapper.mapTo(session));
+    }
+
+    @PostMapping("/surrender/{sessionId}")
+    public ResponseEntity<Session> surrender(@PathVariable UUID sessionId) {
+        return ResponseEntity.ok(gameService.surrender(sessionId));
+    }
+
+    @PostMapping("/hint/{sessionId}")
+    public ResponseEntity<SessionDto> hint(@PathVariable UUID sessionId) {
+        return ResponseEntity.ok(sessionMapper.mapTo(gameService.hint(sessionId)));
     }
 
 

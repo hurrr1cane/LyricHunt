@@ -9,8 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class GameService {
@@ -58,6 +60,8 @@ public class GameService {
 
     public Session revealWord(UUID sessionId, JsonNode guessJson) {
 
+        System.out.println(guessJson.toString());
+
         String guess = guessJson.get("word").asText();
 
         Session session = sessionRepository.findById(sessionId).
@@ -70,7 +74,10 @@ public class GameService {
             guess = guess.split(" ")[0];
         }
         // Remove all non-alphabetic characters or ' - from the guess
-        guess = guess.replaceAll("[^a-zA-Zа-яїієґА-ЯЇІЄҐ' -]", "");
+        guess = guess.replaceAll("[^a-zA-Zа-яїієґА-ЯЇІЄҐ'0-9 -]", "");
+        if (guess.isEmpty()) {
+            return session;
+        }
 
 
 
@@ -125,6 +132,59 @@ public class GameService {
         }
 
         return sessionRepository.save(session);
+    }
+
+    public Session surrender(UUID sessionId) {
+        Session session = sessionRepository.findById(sessionId).
+                orElseThrow(() -> new RuntimeException("Session not found"));
+
+        session.setGuessed(true);
+
+        return sessionRepository.save(session);
+    }
+
+    public Session hint(UUID sessionId) {
+        Session session = sessionRepository.findById(sessionId).
+                orElseThrow(() -> new RuntimeException("Session not found"));
+
+        String lyrics = session.getSong().getLyrics();
+        String guess = session.getGuess();
+
+        // Find the random word that is not guessed yet
+        String[] words = lyrics
+                .toLowerCase()
+                .replace("\n", " ")
+                .split(" ");
+
+        List<String> guessedWords = Arrays
+                .stream(guess
+                        .toLowerCase()
+                        .replace("\n", " ")
+                        .split(" "))
+                .filter(word -> !word.contains("_"))
+                .filter(word -> !word.isEmpty())
+                .filter(word -> !word.isBlank())
+                .toList();
+
+        System.out.println("Guessed words: " + guessedWords);
+        List<String> notGuessedWords = Arrays.stream(words)
+                .filter(word -> !guessedWords.contains(word))
+                .filter(word -> !word.isEmpty())
+                .filter(word -> !word.isBlank())
+                .toList();
+
+        System.out.println("Not guessed words: " + notGuessedWords);
+
+        if (notGuessedWords.isEmpty()) {
+            return session;
+
+        }
+
+        String randomWord = notGuessedWords.get((int) (Math.random() * notGuessedWords.size()));
+
+        // Reveal the random word
+        return revealWord(sessionId, objectMapper.createObjectNode().put("word", randomWord));
+
     }
 
     private boolean isPartlyMatched(String songName, String guess) {

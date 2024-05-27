@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -27,4 +28,11 @@ public class Session {
     private String guess;
 
     private boolean guessed;
+
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }
