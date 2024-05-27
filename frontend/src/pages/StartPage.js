@@ -28,6 +28,12 @@ export default function StartPage() {
     setArtistName(event.target.value);
   };
 
+  const handleKeyPress = (event) => {
+    if (event.key === "Enter") {
+      startGameHandler();
+    }
+  };
+
   return (
     <div className={styles.main}>
       <h1 className={styles.h1}>LyricHunt</h1>
@@ -41,6 +47,7 @@ export default function StartPage() {
       {/* Pass value and onChange handler to Input component */}
       <Input
         placeholder="Artist's name"
+        onKeyPress={handleKeyPress}
         value={artistName} // Set value
         onChange={handleArtistNameChange} // Pass handler function directly
         className={error ? `${styles.input} ${styles.error}` : styles.input}

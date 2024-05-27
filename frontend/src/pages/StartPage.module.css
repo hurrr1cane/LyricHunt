@@ -48,3 +48,22 @@
 .input.error::placeholder {
   color: red;
 }
+
+@media (max-width: 600px) {
+  .h1 {
+    font-size: 5rem;
+  }
+
+  .h3 {
+    font-size: 1rem;
+  }
+
+  .p {
+    font-size: 1rem;
+  }
+
+  .input {
+    width: 15rem;
+  }
+  
+}

@@ -6,7 +6,7 @@
   color: white;
 
   backdrop-filter: blur(2rem);
-  border-radius: 1rem;
+  border-radius: 0.5rem;
   background-color: rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
@@ -15,7 +15,7 @@
   transition: background-color 0.3s;
   user-select: none;
 
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   padding: 0.5rem;
   border: none;
 }
@@ -25,9 +25,8 @@
 }
 
 .input {
-  min-width: none;
+  min-width: 10rem;
   height: 1.5rem;
-  min-width: 20rem;
   color: #333;
   border: none;
   border-radius: 0.5rem;
@@ -38,6 +37,10 @@
   font-size: 1.2rem;
   /* Transitions */
   transition: background-color 0.5s, border 0.5s;
+}
+
+.input::placeholder {
+  color: #555;
 }
 
 .input:focus {

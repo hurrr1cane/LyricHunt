@@ -7,7 +7,7 @@
   justify-content: center;
   align-items: center;
   margin-bottom: 1rem;
-  padding: 1rem;
+  padding: 3rem 3rem 0 3rem;
 }
 
 .h1 {
@@ -17,7 +17,7 @@
 
 .main {
   display: flex;
-  margin: 2rem 5vw;
+  margin: 2rem;
   padding: 2rem;
   flex-direction: column;
 }
@@ -26,7 +26,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-around;
+  justify-content: center;
 }
 .row > * {
   margin: 0.5rem;
@@ -56,6 +56,8 @@
   margin-top: 1rem;
 
   min-width: 5rem;
+  flex: 1;;
+  align-self: center;
   color: white;
 
   backdrop-filter: blur(2rem);
@@ -68,7 +70,9 @@
   transition: background-color 0.3s;
 
   font-size: 1.5rem;
-  padding: 0.5rem;
+  padding: 1rem;
+  width: 100%;
+  align-items: center;
   border: none;
 }
 
@@ -83,4 +87,25 @@
 
 .inputStart {
   text-align: start;
+}
+
+.input {
+  flex: 1;
+}
+
+@media screen and (max-width: 600px)
+{
+
+
+  .lyricsSection {
+    font-size: 1rem;
+    padding: 0.5rem 5vw;
+    
+  }
+
+  .main {
+    margin: 1rem;
+    padding: 2rem;
+  }
+  
 }

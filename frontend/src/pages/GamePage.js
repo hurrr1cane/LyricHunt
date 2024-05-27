@@ -11,8 +11,6 @@ export default function GamePage() {
 
   const [lyrics, setLyrics] = useState(data.guess); // State to store lyrics
 
-  
-
   const [wordToReveal, setWordToReveal] = useState(""); // State to store word to reveal
 
   async function revealHandler() {
@@ -38,6 +36,16 @@ export default function GamePage() {
       .catch((error) => {
         console.error("Error:", error);
       });
+
+    // Clear the input field
+    setWordToReveal("");
+  }
+
+  const handleKeyPress = (event) => {
+    // Check for 'enter' key press
+    if (event.key === "Enter") {
+      revealHandler();
+    }
   }
 
   const wordOnChange = (event) => {
@@ -53,13 +61,15 @@ export default function GamePage() {
       <div className={styles.main}>
         <div className={`${styles.row} ${styles.center}`}>
           <h2>{data.artist} - </h2>
-          <Input placeholder="Enter the song name" />
-          <Button className="small-button">Submit</Button>
+          <Input className={styles.input} placeholder="Enter the song name" />
+          <Button className="small-button">Guess</Button>
         </div>
         <div className={styles.lyricsSection}>
-          <div className={`${styles.row} ${styles.left}`}>
+          <div className={`${styles.row}`}>
             <Input
               onChange={wordOnChange}
+              onKeyPress={handleKeyPress}
+              value={wordToReveal}
               className={styles.inputStart}
               placeholder="Enter the word to reveal"
             />
