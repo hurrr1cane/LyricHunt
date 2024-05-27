@@ -89,8 +89,20 @@
   text-align: start;
 }
 
-.input {
+.flex1 {
   flex: 1;
+}
+
+.spaceBetween {
+
+  width: 100%;
+}
+
+.right {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  align-self: self-end;
 }
 
 @media screen and (max-width: 600px)
@@ -98,9 +110,7 @@
 
 
   .lyricsSection {
-    font-size: 1rem;
     padding: 0.5rem 5vw;
-    
   }
 
   .main {

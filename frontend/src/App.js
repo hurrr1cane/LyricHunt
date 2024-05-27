@@ -12,7 +12,7 @@ function App() {
   const router = createBrowserRouter([
     { path: "/", element: <StartPage /> },
     { path: "/game/:artistName", element: <GamePage />, loader: gameLoader, errorElement: <ErrorPage />},
-    { path: "/game/win", element: <WinPage /> },
+    { path: "/game/end", element: <WinPage /> },
   ]);
 
   return <RouterProvider router={router}></RouterProvider>;

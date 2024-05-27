@@ -2,6 +2,8 @@ import { React, useState } from "react";
 import { useLoaderData, useNavigate } from "react-router-dom";
 import Input from "../components/Input";
 import Button from "../components/Button";
+import Timer from "../components/Timer";
+import { urlApi } from "../config";
 
 import styles from "./GamePage.module.css";
 
@@ -9,29 +11,41 @@ export default function GamePage() {
   const data = useLoaderData();
   const navigate = useNavigate();
 
-
-
   const [lyrics, setLyrics] = useState(data.guess); // State to store lyrics
 
   const [wordToReveal, setWordToReveal] = useState(""); // State to store word to reveal
 
   const [songName, setSongName] = useState(""); // State to store song name
-  async function revealHandler() {
-    // Make a post request to http://localhost:8080/game/reveal/{sessionId} with the word to reveal
+
+  const [hintCount, setHintCount] = useState(0); // State to store hint count
+
+  async function surrenderHandler() {
+    // Make a post request to urlApi/game/surrender/{sessionId}
+    // If the request is successful, navigate to the LosePage
+    // If the request is unsuccessful, show an error message
+
+    const response = await fetch(`${urlApi}/game/surrender/${data.sessionId}`, {
+      method: "POST",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        navigate("/game/end", {
+          state: { data, hintCount: hintCount, time: currentTime },
+        });
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  }
+
+  async function hintHandler() {
+    // Make a post request to ${urlApi}/game/hint/{sessionId}
     // If the request is successful, update the lyrics state
+    // If the request is unsuccessful, show an error message
 
-    console.log(data.sessionId);
-
-    const response = await fetch(
-      `http://localhost:8080/game/reveal/${data.sessionId}`,
-      {
-        method: "POST",
-        body: JSON.stringify({ word: wordToReveal }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    )
+    const response = await fetch(`${urlApi}/game/hint/${data.sessionId}`, {
+      method: "POST",
+    })
       .then((response) => response.json())
       .then((data) => {
         setLyrics(data.guess);
@@ -40,7 +54,28 @@ export default function GamePage() {
         console.error("Error:", error);
       });
 
-    // Clear the input field
+    setHintCount(hintCount + 1);
+  }
+
+  async function revealHandler() {
+    // Make a post request to ${urlApi}/game/reveal/{sessionId} with the word to reveal
+    // If the request is successful, update the lyrics state
+
+    const response = await fetch(`${urlApi}/game/reveal/${data.sessionId}`, {
+      method: "POST",
+      body: JSON.stringify({ word: wordToReveal }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setLyrics(data.guess);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+
     setWordToReveal("");
   }
 
@@ -52,22 +87,21 @@ export default function GamePage() {
   };
 
   async function guessHandler() {
-    const response = await fetch(
-      `http://localhost:8080/game/guess/${data.sessionId}`,
-      {
-        method: "POST",
-        body: JSON.stringify({ guess: songName }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    )
+    const response = await fetch(`${urlApi}/game/guess/${data.sessionId}`, {
+      method: "POST",
+      body: JSON.stringify({ guess: songName }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
       .then((response) => response.json())
       .then((data) => {
         setLyrics(data.guess);
         if (data.guessed) {
           // Redirect to WinPage
-          navigate("/game/win", { state: { data } });
+          navigate("/game/end", {
+            state: { data, hintCount: hintCount, time: currentTime },
+          });
         }
       })
       .catch((error) => {
@@ -87,13 +121,23 @@ export default function GamePage() {
     }
   };
 
-
   const wordOnChange = (event) => {
     setWordToReveal(event.target.value);
   };
 
-  
-  return ( 
+  const [currentTime, setCurrentTime] = useState(0);
+
+  const handleTimeUpdate = (time) => {
+    setCurrentTime(time);
+  };
+
+  const formatTime = (totalSeconds) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+  };
+
+  return (
     <div class={styles.body}>
       <div className={styles.header}>
         <h1 className={styles.h1}>LyricHunt</h1>
@@ -104,7 +148,7 @@ export default function GamePage() {
           <h2>{data.artist} - </h2>
           <Input
             value={songName}
-            className={styles.input}
+            className={styles.flex1}
             onKeyPress={handleKeyPressGuess}
             placeholder="Enter the song name"
             onChange={guessOnChange}
@@ -129,6 +173,18 @@ export default function GamePage() {
           <div>
             <h3 className={styles.h3}>Lyrics:</h3>
             <p className={styles.lyrics}>{formatLyrics(lyrics)}</p>
+          </div>
+
+          <div className={`${styles.row} ${styles.spaceBetween}`}>
+            <div className={`${styles.flex1} ${styles.left}`}>
+              <Button onClick={surrenderHandler}>Surrender</Button>
+            </div>
+            <div className={`${styles.flex1} ${styles.center}`}>
+              <Timer onTimeUpdate={handleTimeUpdate} />
+            </div>
+            <div className={`${styles.flex1} ${styles.right}`}>
+              <Button onClick={hintHandler}>Hint</Button>
+            </div>
           </div>
         </div>
       </div>
@@ -156,13 +212,13 @@ function formatLyrics(lyrics) {
 }
 
 export async function loader({ request, params }) {
-  //Make post request on http://localhost:8080/game/start?artistName=Scorpions
+  //Make post request on ${urlApi}/game/start?artistName=Scorpions
   //If the request is successful, navigate to /game
   //If the request is unsuccessful, show an error message
 
   const artistName = params.artistName;
   const response = await fetch(
-    `http://localhost:8080/game/start?artistName=${artistName}`,
+    `${urlApi}/game/start?artistName=${artistName}`,
     {
       method: "POST",
     }
@@ -171,7 +227,7 @@ export async function loader({ request, params }) {
       throw new Error("Failed to start the game");
     }
     return response.json();
-  })
+  });
 
   return response;
 }
