@@ -9,10 +9,10 @@
 		<relativePath/>
 	</parent>
 	<groupId>com.mhorak</groupId>
-	<artifactId>lyrichunter</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>LyricHunter</name>
-	<description>A backend for LyricHunter game</description>
+	<artifactId>lyrichunt</artifactId>
+	<version>1.0.0</version>
+	<name>LyricHunt</name>
+	<description>A backend for LyricHunt game</description>
 	<properties>
 		<java.version>17</java.version>
 	</properties>

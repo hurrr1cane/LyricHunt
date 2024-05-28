@@ -89,7 +89,7 @@ public class GameService {
         while (index != -1) {
 
             // If the word is surrounded by " " or "\n" or "," or "." or "!" or "?" or ":", replace it
-            String[] surroundingChars = {" ", "\n", ",", ".", "!", "?", ":", "", ";"};
+            String[] surroundingChars = {" ", "\n", ",", ".", "!", "?", ":", "", ";", "—", "(", ")", "\""};
 
             String[] wordSurroundings = new String[2];
 
@@ -128,6 +128,7 @@ public class GameService {
                 orElseThrow(() -> new RuntimeException("Session not found"));
 
         if (isPartlyMatched(session.getSong().getTitle(), guess)) {
+            System.out.println("Guessed!");
             session.setGuessed(true);
         }
 
@@ -137,8 +138,6 @@ public class GameService {
     public Session surrender(UUID sessionId) {
         Session session = sessionRepository.findById(sessionId).
                 orElseThrow(() -> new RuntimeException("Session not found"));
-
-        session.setGuessed(true);
 
         return sessionRepository.save(session);
     }
@@ -213,7 +212,7 @@ public class GameService {
         }
 
         // Verify if the number of matched words meets the threshold
-        return matchedWords >= minWordMatchThreshold || guessWords.length == songNameWords.length;
+        return matchedWords >= minWordMatchThreshold;
     }
 
     private Song convertSongResponse(String songResponse) {
@@ -252,7 +251,7 @@ public class GameService {
             guess.append(" ");
         }
 
-        Character[] punctuation = {'.', ',', '!', '?', ':', ';', '\n', '—', '(', ')'};
+        Character[] punctuation = {'.', ',', '!', '?', ':', ';', '\n', '—', '(', ')', '\"'};
         for (int i = 0; i < lyrics.length(); i++) {
             if (List.of(punctuation).contains(lyrics.charAt(i))) {
                 guess.setCharAt(i, lyrics.charAt(i));
