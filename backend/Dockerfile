@@ -1,14 +1,10 @@
-# Use an official OpenJDK runtime as a parent image
-FROM openjdk:17-jdk-alpine
-
-# Set the working directory in the container
+FROM maven:3.8.4-openjdk-17 as builder
 WORKDIR /app
+COPY . /app/.
+RUN mvn -f /app/pom.xml clean package -Dmaven.test.skip=true
 
-# Copy the project JAR file into the container at /app
-COPY target/lyrichunt-1.0.0.jar /app/lyrichunt-1.0.0.jar
-
-# Expose the port that your application runs on
+FROM openjdk:17-oracle
+WORKDIR /app
+COPY --from=builder /app/target/*.jar /app/*.jar
 EXPOSE 8080
-
-# Run the JAR file
-ENTRYPOINT ["java", "-jar", "lyrichunt-1.0.0.jar"]
+ENTRYPOINT ["java", "-jar", "/app/*.jar"]
