@@ -112,7 +112,7 @@ public class GeniusApiService {
             // The actual selector might vary depending on the HTML structure of the page
 
 
-            Element lyricsElement = document.selectFirst("#lyrics-root > div.Lyrics__Container-sc-1ynbvzw-1.kUgSbL");
+            Element lyricsElement = document.selectFirst("#lyrics-root > div.Lyrics-sc-1bcc94c6-1");
 
             if (lyricsElement != null) {
 
